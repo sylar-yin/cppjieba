@@ -24,6 +24,12 @@ const double MAX_DOUBLE = 3.14e+100;
 const size_t DICT_COLUMN_NUM = 3;
 const char* const UNKNOWN_TAG = "";
 
+struct WordUnit {
+    std::string word;
+    double weight = 0;
+    std::string tag;
+};
+
 class DictTrie {
  public:
   enum UserWordWeightOption {
@@ -34,6 +40,10 @@ class DictTrie {
 
   DictTrie(const string& dict_path, const string& user_dict_paths = "", UserWordWeightOption user_word_weight_opt = WordWeightMedian) {
     Init(dict_path, user_dict_paths, user_word_weight_opt);
+  }
+
+  DictTrie(const std::vector<WordUnit>& dict, const std::vector<WordUnit>& user_dict, UserWordWeightOption user_word_weight_opt = WordWeightMedian) {
+    Init(dict, user_dict, user_word_weight_opt);
   }
 
   ~DictTrie() {
@@ -117,21 +127,21 @@ class DictTrie {
                 buf[0], 
                 user_word_default_weight_,
                 UNKNOWN_TAG);
-        } else if (buf.size() == 2) {
-          MakeNodeInfo(node_info, 
-                buf[0], 
-                user_word_default_weight_,
-                buf[1]);
-        } else if (buf.size() == 3) {
-          int freq = atoi(buf[1].c_str());
-          assert(freq_sum_ > 0.0);
-          double weight = log(1.0 * freq / freq_sum_);
-          MakeNodeInfo(node_info, buf[0], weight, buf[2]);
-        }
-        static_node_infos_.push_back(node_info);
-        if (node_info.word.size() == 1) {
-          user_dict_single_chinese_word_.insert(node_info.word[0]);
-        }
+    } else if (buf.size() == 2) {
+      MakeNodeInfo(node_info,
+            buf[0],
+            user_word_default_weight_,
+            buf[1]);
+    } else if (buf.size() == 3) {
+      int freq = atoi(buf[1].c_str());
+      assert(freq_sum_ > 0.0);
+      double weight = log(1.0 * freq / freq_sum_);
+      MakeNodeInfo(node_info, buf[0], weight, buf[2]);
+    }
+    static_node_infos_.push_back(node_info);
+    if (node_info.word.size() == 1) {
+      user_dict_single_chinese_word_.insert(node_info.word[0]);
+    }
   }
   
   void LoadUserDict(const vector<string>& buf) {
@@ -166,6 +176,38 @@ class DictTrie {
 
 
  private:
+  static inline bool DoubleEqual(double a, double b) {
+    return fabs(a - b) < std::numeric_limits<double>::epsilon();
+  }
+
+  void Init(const std::vector<WordUnit>& dict, const std::vector<WordUnit>& user_dict, UserWordWeightOption user_word_weight_opt) {
+    DictUnit node_info;
+    for (auto& i : dict) {
+      MakeNodeInfo(node_info,
+            i.word,
+            i.weight,
+            i.tag);
+      static_node_infos_.push_back(node_info);
+    }
+    freq_sum_ = CalcFreqSum(static_node_infos_);
+    CalculateWeight(static_node_infos_, freq_sum_);
+    SetStaticWordWeights(user_word_weight_opt);
+
+    for(auto& i : user_dict) {
+      MakeNodeInfo(node_info,
+            i.word,
+            DoubleEqual(i.weight, 0.0) ? user_word_default_weight_ : log(1.0 * i.weight / freq_sum_),
+            i.tag);
+        static_node_infos_.push_back(node_info);
+        if (node_info.word.size() == 1) {
+          user_dict_single_chinese_word_.insert(node_info.word[0]);
+        }
+    }
+
+    Shrink(static_node_infos_);
+    CreateTrie(static_node_infos_);
+  }
+
   void Init(const string& dict_path, const string& user_dict_paths, UserWordWeightOption user_word_weight_opt) {
     LoadDict(dict_path);
     freq_sum_ = CalcFreqSum(static_node_infos_);

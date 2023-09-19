@@ -22,6 +22,22 @@ class Jieba {
       query_seg_(&dict_trie_, &model_),
       extractor(&dict_trie_, &model_, idfPath, stopWordPath) {
   }
+
+  Jieba(const std::vector<WordUnit>& dict,
+        const string& model_path,
+        const std::vector<WordUnit>& user_dict,
+        const string& idfPath,
+        const string& stopWordPath)
+    : dict_trie_(dict, user_dict),
+      model_(model_path),
+      mp_seg_(&dict_trie_),
+      hmm_seg_(&model_),
+      mix_seg_(&dict_trie_, &model_),
+      full_seg_(&dict_trie_),
+      query_seg_(&dict_trie_, &model_),
+      extractor(&dict_trie_, &model_, idfPath, stopWordPath) {
+  }
+
   ~Jieba() {
   }
 
