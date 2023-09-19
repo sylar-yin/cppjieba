@@ -9,7 +9,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "/usr/local/cppjieba" CACHE PATH "default install path" FORCE )
 endif()
 
-ADD_DEFINITIONS(-O3 -Wall -g)
+ADD_DEFINITIONS(-O0 -Wall -g)
 IF(APPLE) # mac os
     ADD_DEFINITIONS(-std=c++0x)
 endif()

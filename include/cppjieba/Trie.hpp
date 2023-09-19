@@ -157,14 +157,19 @@ class Trie {
         kmIter = ptNode->next->find(*citer);
         //如果map中不存在,跳出循环
         if (ptNode->next->end() == kmIter) {
+              ptNode = nullptr;
               break;
         }
-        //从unordered_map中擦除该项
-        ptNode->next->erase(*citer);
-        //删除该node
         ptNode = kmIter->second;
-        delete ptNode;
-        break;
+        ////从unordered_map中擦除该项
+        //ptNode->next->erase(*citer);
+        ////删除该node
+        //ptNode = kmIter->second;
+        //delete ptNode;
+        //break;
+      }
+      if(ptNode) {
+        ptNode->ptValue = nullptr;
       }
       return;
  }

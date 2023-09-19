@@ -45,6 +45,12 @@ int main(int argc, char** argv) {
   jieba.Cut("男默女泪", words);
   cout << limonp::Join(words.begin(), words.end(), "/") << endl;
   jieba.InsertUserWord("男默女泪");
+  jieba.InsertUserWord("男默女", 10000000);
+  jieba.Cut("男默女泪", words);
+  cout << limonp::Join(words.begin(), words.end(), "/") << endl;
+  jieba.DeleteUserWord("男默女泪");
+  jieba.CutSmall("男耕女织", words, 1024);
+  cout << limonp::Join(words.begin(), words.end(), "/") << endl;
   jieba.Cut("男默女泪", words);
   cout << limonp::Join(words.begin(), words.end(), "/") << endl;
 
@@ -70,11 +76,40 @@ int main(int argc, char** argv) {
   cout << s << endl;
   cout << tagres << endl;
 
+  std::vector<std::string> ngrams;
+  jieba.CutNgram(s, ngrams, 3);
+  cout << limonp::Join(ngrams.begin(), ngrams.end(), "|") << endl;
+
+  std::vector<std::vector<std::string>> ngramsX;
+  std::vector<int> ns = {3, 4, 5, 6};
+
+  jieba.CutNgram(s, ngramsX, ns);
+  for(int i = 0; i < ns.size(); ++i) {
+      std::cout << ns[i] << ":\t";
+      cout << limonp::Join(ngramsX[i].begin(), ngramsX[i].end(), "|") << endl;
+  }
+
   cout << "[demo] Keyword Extraction" << endl;
   const size_t topk = 5;
   vector<cppjieba::KeywordExtractor::Word> keywordres;
   jieba.extractor.Extract(s, keywordres, topk);
   cout << s << endl;
   cout << keywordres << endl;
+
+  while(true) {
+    std::string line;
+    std::getline(std::cin, line);
+
+    if(line[0] == 'A') {
+      jieba.InsertUserWord(line.substr(1), 10000);
+    } else if(line[0] == 'D') {
+      jieba.DeleteUserWord(line.substr(1));
+    } else if(line[0] == 'C') {
+      jieba.CutSmall(line.substr(1), words, 1024);
+      cout << limonp::Join(words.begin(), words.end(), "/") << endl;
+    } else {
+      cout << "A/D/Cxxx" << std::endl;
+    }
+  }
   return EXIT_SUCCESS;
 }

@@ -79,6 +79,45 @@ class Jieba {
   bool DeleteUserWord(const string& word, const string& tag = UNKNOWN_TAG) {
     return dict_trie_.DeleteUserWord(word, tag);
   }
+
+  bool CutNgram(const std::string& word, std::vector<std::string>& results, int n) {
+    RuneStrArray runes;
+    if (!DecodeRunesInString(word, runes)) {
+      XLOG(ERROR) << "Decode failed.";
+      return false;
+    }
+    if(runes.size() < n) {
+        return false;
+    }
+
+    for(int i = 0; i < (runes.size() - n); ++i) {
+        int offset = runes[i].offset;
+        int len = runes[i + n - 1].offset - runes[i].offset + runes[i + n - 1].len;
+        results.push_back(word.substr(offset, len));
+    }
+    return true;
+  }
+
+  bool CutNgram(const std::string& word, std::vector<std::vector<std::string> >& results, const std::vector<int> ns) {
+    RuneStrArray runes;
+    if (!DecodeRunesInString(word, runes)) {
+      XLOG(ERROR) << "Decode failed.";
+      return false;
+    }
+
+    results.resize(ns.size());
+
+    for(int x = 0; x < ns.size(); ++x) {
+        int n = ns[x];
+        for(int i = 0; i < (runes.size() - n); ++i) {
+            int offset = runes[i].offset;
+            int len = runes[i + n - 1].offset - runes[i].offset + runes[i + n - 1].len;
+            results[x].push_back(word.substr(offset, len));
+        }
+    }
+    return true;
+  }
+
   
   bool Find(const string& word)
   {
